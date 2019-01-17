@@ -7,13 +7,13 @@ module.exports = {
     username: {
       type: 'string',
       unique: true,
-      index: true,
-      notNull: true
+      index: true
     },
     email: {
-      type: 'email',
+      type: 'string',
       unique: true,
-      index: true
+      index: true,
+      isEmail: true
     },
     passports: {
       collection: 'Passport',
