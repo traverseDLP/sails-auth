@@ -1,6 +1,6 @@
 {
   "name": "@traverse-data/sails-auth",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Passport-based User Authentication system for sails.js applications.",
   "main": "dist/api/hooks/auth/index.js",
   "scripts": {
