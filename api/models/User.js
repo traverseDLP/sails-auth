@@ -19,24 +19,24 @@ module.exports = {
       collection: 'Passport',
       via: 'user'
     },
-
-    getGravatarUrl: function () {
-      var md5 = crypto.createHash('md5');
-      md5.update(this.email || '');
-      return 'https://gravatar.com/avatar/'+ md5.digest('hex');
-    },
-
-    toJSON: function () {
-      var user = this.toObject();
-      delete user.password;
-      user.gravatarUrl = this.getGravatarUrl();
-      return user;
+    gravatarUrl: {
+      type: 'string'
     }
+    // toJSON: function () {
+    //   var user = this.toObject();
+    //   delete user.password;
+    //   return user;
+    // }
   },
 
   beforeCreate: function (user, next) {
     if (_.isEmpty(user.username)) {
       user.username = user.email;
+    }
+    if (_.isEmpty(user.gravatarUrl)) {
+      var md5 = crypto.createHash('md5');
+      md5.update(this.email || '');
+      user.gravatarUrl = 'https://gravatar.com/avatar/' + md5.digest('hex');
     }
     next();
   },

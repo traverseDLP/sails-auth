@@ -1,7 +1,7 @@
 var crypto = require('crypto');
 var base64URL = require('base64url');
 var SAError = require('../../../lib/error/SAError.js');
-
+var bcrypt = require('bcryptjs');
 /**
  * Local Authentication Protocol
  *
@@ -170,6 +170,16 @@ exports.connect = function (req, res, next) {
 };
 
 /**
+     * Validate password used by the local strategy.
+     *
+     * @param {string}   password The password to validate
+     * @param {Function} callback
+     */
+var validatePassword = function (password, callback) {
+  bcrypt.compare(password, this.password, callback);
+};
+
+/**
  * Validate a login request
  *
  * Looks up a user using the supplied identifier (email or username) and then
@@ -212,7 +222,7 @@ exports.login = function (req, identifier, password, next) {
     , user     : user.id
     }, function (err, passport) {
       if (passport) {
-        passport.validatePassword(password, function (err, res) {
+        validatePassword(password, function (err, res) {
           if (err) {
             return next(err);
           }
