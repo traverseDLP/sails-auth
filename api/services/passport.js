@@ -298,7 +298,7 @@ if (sails.services.passport) {
           baseUrl = sails.config.appUrl;
         } else {
           sails.log.warn('Please add "appUrl" configuration value.');
-          baseUrl = sails.getBaseurl();
+          baseUrl = sails.config.apiServerRoot;
         }
 
         switch (protocol) {
