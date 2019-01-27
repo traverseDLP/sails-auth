@@ -47,7 +47,7 @@ var Passport = {
     // strategy, the protocol will be set to 'local'. When using a third-party
     // strategy, the protocol will be set to the standard used by the third-
     // party service (e.g. 'oauth', 'oauth2', 'openid').
-    protocol: { type: 'alphanumeric', required: true },
+    protocol: { type: 'string', required: true },
 
     // Local field: Password
     //
@@ -69,7 +69,7 @@ var Passport = {
     // dards. When using OAuth 1.0, a `token` as well as a `tokenSecret` will
     // be issued by the provider. In the case of OAuth 2.0, an `accessToken`
     // and a `refreshToken` will be issued.
-    provider   : { type: 'alphanumericdashed' },
+    provider   : { type: 'string' },
     identifier : { type: 'string' },
     tokens     : { type: 'json' },
 
