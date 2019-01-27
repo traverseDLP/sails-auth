@@ -7,12 +7,14 @@ module.exports = {
     username: {
       type: 'string',
       unique: true,
-      index: true
+      // TODO fix this index
+      // index: true
     },
     email: {
       type: 'string',
       unique: true,
-      index: true,
+      // TODO fix this index
+      // index: true,
       isEmail: true
     },
     passports: {
