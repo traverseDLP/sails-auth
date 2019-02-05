@@ -41,13 +41,15 @@ exports.update = function (user, next) {
  * @param {Function} next
  */
 exports.createUser = function (_user, next) {
+  var accessToken = generateToken();
+  var password = _user.password;
+  delete _user.password;
   return sails.models.user.findOrCreate({ email: _user.email }, _user)
-    .exec(async (err, user) => {
+    .exec(async function (err, user) {
       if (err) {
         console.log('************ find or create error: ', err);
         return next(err);
-      }
-      else {
+      } else {
         try {
           await sails.models.passport.create({
             protocol: 'local',
@@ -61,7 +63,7 @@ exports.createUser = function (_user, next) {
             err = new SAError({ originalError: err });
           }
 
-          return user.destroy(function (destroyErr) {
+          return sails.models.user.destroy(user, function (destroyErr) {
             next(destroyErr || err);
           });
         } finally {
