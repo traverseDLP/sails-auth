@@ -41,6 +41,10 @@ function hashPassword (passport, next) {
  */
 var Passport = {
   attributes: {
+    id: {
+      type: 'number',
+      autoIncrement: true
+    },
     // Required field: Protocol
     //
     // Defines the protocol to use for the passport. When employing the local

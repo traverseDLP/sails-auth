@@ -4,41 +4,34 @@ var crypto = require('crypto');
 /** @module User */
 module.exports = {
   attributes: {
+    id: {
+      type: 'number',
+      autoIncrement: true
+    },
     username: {
       type: 'string',
       unique: true,
-      // TODO fix this index
-      // index: true
+      meta: {
+        index: true
+      }
     },
     email: {
       type: 'string',
       unique: true,
-      // TODO fix this index
-      // index: true,
+      meta: {
+        index: true
+      },
       isEmail: true
     },
     passports: {
       collection: 'Passport',
       via: 'user'
-    },
-    gravatarUrl: {
-      type: 'string'
     }
-    // toJSON: function () {
-    //   var user = this.toObject();
-    //   delete user.password;
-    //   return user;
-    // }
   },
 
   beforeCreate: function (user, next) {
     if (_.isEmpty(user.username)) {
       user.username = user.email;
-    }
-    if (_.isEmpty(user.gravatarUrl)) {
-      var md5 = crypto.createHash('md5');
-      md5.update(this.email || '');
-      user.gravatarUrl = 'https://gravatar.com/avatar/' + md5.digest('hex');
     }
     next();
   },
