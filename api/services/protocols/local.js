@@ -210,11 +210,12 @@ exports.connect = function (req, res, next) {
 /**
      * Validate password used by the local strategy.
      *
-     * @param {string}   password The password to validate
+     * @param {string}   subjectPassword The password to validate
+     * @param {string}   knownPassword The password to compare
      * @param {Function} callback
      */
-var validatePassword = function validatePassword(password, callback) {
-  bcrypt.compare(password, this.password, callback);
+const validatePassword = function (subjectPassword, knownPassword, callback) {
+  bcrypt.compare(subjectPassword, knownPassword, callback);
 };
 
 /**
@@ -259,12 +260,14 @@ exports.login = function (req, identifier, password, next) {
       user: user.id
     }, function (err, passport) {
       if (passport) {
-        validatePassword(password, function (err, res) {
+        validatePassword(password, passport.password, function (err, res) {
           if (err) {
+            console.log('********* Error validatePassword: ', err);
             return next(err);
           }
 
           if (!res) {
+            console.log('********* Error validatePassword password is invalid or doesnt match: ', err);
             req.flash('error', 'Error.Passport.Password.Wrong');
             return next(null, false);
           } else {
@@ -272,6 +275,7 @@ exports.login = function (req, identifier, password, next) {
           }
         });
       } else {
+        console.log('********* Error fetching passport: ', err || passport);
         req.flash('error', 'Error.Passport.Password.NotSet');
         return next(null, false);
       }
