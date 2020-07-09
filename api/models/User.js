@@ -10,12 +10,14 @@ module.exports = {
     },
     username: {
       type: 'string',
-      unique: true
+      unique: true,
+      required: true,
     },
     email: {
       type: 'string',
       unique: true,
-      isEmail: true
+      isEmail: true,
+      required: true
     },
     passports: {
       collection: 'Passport',
