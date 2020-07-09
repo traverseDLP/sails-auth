@@ -10,17 +10,11 @@ module.exports = {
     },
     username: {
       type: 'string',
-      unique: true,
-      // meta: {
-      //   index: true
-      // }
+      unique: true
     },
     email: {
       type: 'string',
       unique: true,
-      // meta: {
-      //   index: true
-      // },
       isEmail: true
     },
     passports: {
