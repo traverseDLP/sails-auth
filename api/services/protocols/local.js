@@ -247,9 +247,9 @@ exports.login = function (req, identifier, password, next) {
 
     if (!user) {
       if (isEmail) {
-        req.flash('error', 'Error.Passport.Email.NotFound');
+        // req.flash('error', 'Error.Passport.Email.NotFound');
       } else {
-        req.flash('error', 'Error.Passport.Username.NotFound');
+        // req.flash('error', 'Error.Passport.Username.NotFound');
       }
 
       return next(null, false);
@@ -268,7 +268,7 @@ exports.login = function (req, identifier, password, next) {
 
           if (!res) {
             console.log('********* Error validatePassword password is invalid or doesnt match: ', err);
-            req.flash('error', 'Error.Passport.Password.Wrong');
+            // req.flash('error', 'Error.Passport.Password.Wrong');
             return next(null, false);
           } else {
             return next(null, user, passport);
@@ -276,7 +276,7 @@ exports.login = function (req, identifier, password, next) {
         });
       } else {
         console.log('********* Error fetching passport: ', err || passport);
-        req.flash('error', 'Error.Passport.Password.NotSet');
+        // req.flash('error', 'Error.Passport.Password.NotSet');
         return next(null, false);
       }
     });
