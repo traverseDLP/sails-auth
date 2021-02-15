@@ -1,7 +1,9 @@
+'use strict';
+
 var crypto = require('crypto');
 var base64URL = require('base64url');
 var SAError = require('../../../lib/error/SAError.js');
-
+var bcrypt = require('bcryptjs');
 /**
  * Local Authentication Protocol
  *
@@ -42,37 +44,66 @@ exports.createUser = function (_user, next) {
   var accessToken = generateToken();
   var password = _user.password;
   delete _user.password;
-
-  return sails.models.user.create(_user, function (err, user) {
-    if (err) {
-      sails.log(err);
-
-      if (err.code === 'E_VALIDATION') {
-        return next(new SAError({originalError: err}));
-      }
-      
-      return next(err);
-    }
-
-    sails.models.passport.create({
-      protocol : 'local'
-    , password : password
-    , user     : user.id
-    , accessToken: accessToken
-    }, function (err, passport) {
+  return sails.models.user.findOrCreate({ email: _user.email }, _user)
+    .exec(async function (err, user) {
       if (err) {
-        if (err.code === 'E_VALIDATION') {
-          err = new SAError({originalError: err});
-        }
-        
-        return user.destroy(function (destroyErr) {
-          next(destroyErr || err);
-        });
-      }
+        console.log('************ find or create error: ', err);
+        return next(err);
+      } else {
+        try {
+          await sails.models.passport.create({
+            protocol: 'local',
+            password: password,
+            user: user.id,
+            accessToken: accessToken
+          });
+        } catch (err) {
+          console.log('*********** passport creation error: ', err);
+          if (err.code === 'E_VALIDATION') {
+            err = new SAError({ originalError: err });
+          }
 
-      next(null, user);
+          return sails.models.user.destroy(user, function (destroyErr) {
+            next(destroyErr || err);
+          });
+        } finally {
+          next(null, user);
+        }
+      }
     });
-  });
+  // var accessToken = generateToken();
+  // var password = _user.password;
+  // delete _user.password;
+
+  // return sails.models.user.create(_user, function (err, user) {
+  //   if (err) {
+  //     sails.log(err);
+
+  //     if (err.code === 'E_VALIDATION') {
+  //       return next(new SAError({ originalError: err }));
+  //     }
+
+  //     return next(err);
+  //   }
+  //   sails.models.passport.create({
+  //     protocol: 'local',
+  //     password: password,
+  //     user: user.id,
+  //     accessToken: accessToken
+  //   }, function (err, passport) {
+  //     if (err) {
+  //       if (err.code === 'E_VALIDATION') {
+  //         err = new SAError({ originalError: err });
+  //       }
+
+  //       return user.destroy(function (destroyErr) {
+  //         next(destroyErr || err);
+  //       });
+  //     }
+
+  //     next(null, user);
+  //   });
+  // });
 };
 
 /**
@@ -107,22 +138,30 @@ exports.updateUser = function (_user, next) {
     // Check if password has a string to replace it
     if (!!password) {
       sails.models.passport.findOne({
-        protocol : 'local'
-        ,user:user.id
-      }, function(err, passport){
-        passport.password = password;
-        passport.save(function (err, passport) {
-          if (err) {
+        protocol: 'local',
+        user: user.id
+      }, function (err, passport) {
+          try {
+            sails.models.passport.update(passport)
+              .set({ password: password });
+            next(null, user);
+          } catch (err) {
             if (err.code === 'E_VALIDATION') {
-              err = new SAError({ originalError: err });
+              next(new SAError({ originalError: err }));
             }
-
-            next(err);
-
           }
+        // passport.password = password;
+        // passport.save(function (err, passport) {
+        //   if (err) {
+        //     if (err.code === 'E_VALIDATION') {
+        //       err = new SAError({ originalError: err });
+        //     }
 
-          next(null, user);
-        })
+        //     next(err);
+        //   }
+
+        //   next(null, user);
+        // });
       });
     } else {
       next(null, user);
@@ -142,13 +181,13 @@ exports.updateUser = function (_user, next) {
  * @param {Function} next
  */
 exports.connect = function (req, res, next) {
-  var user     = req.user
-    , password = req.param('password')
-    , Passport = sails.models.passport;
+  var user = req.user,
+    password = req.param('password'),
+    Passport = sails.models.passport;
 
   Passport.findOne({
-    protocol : 'local'
-  , user     : user.id
+    protocol: 'local',
+    user: user.id
   }, function (err, passport) {
     if (err) {
       return next(err);
@@ -156,17 +195,27 @@ exports.connect = function (req, res, next) {
 
     if (!passport) {
       Passport.create({
-        protocol : 'local'
-      , password : password
-      , user     : user.id
+        protocol: 'local',
+        password: password,
+        user: user.id
       }, function (err, passport) {
         next(err, user);
       });
-    }
-    else {
+    } else {
       next(null, user);
     }
   });
+};
+
+/**
+     * Validate password used by the local strategy.
+     *
+     * @param {string}   subjectPassword The password to validate
+     * @param {string}   knownPassword The password to compare
+     * @param {Function} callback
+     */
+const validatePassword = function (subjectPassword, knownPassword, callback) {
+  bcrypt.compare(subjectPassword, knownPassword, callback);
 };
 
 /**
@@ -182,13 +231,12 @@ exports.connect = function (req, res, next) {
  * @param {Function} next
  */
 exports.login = function (req, identifier, password, next) {
-  var isEmail = validateEmail(identifier)
-    , query   = {};
+  var isEmail = validateEmail(identifier),
+    query = {};
 
   if (isEmail) {
     query.email = identifier;
-  }
-  else {
+  } else {
     query.username = identifier;
   }
 
@@ -199,34 +247,36 @@ exports.login = function (req, identifier, password, next) {
 
     if (!user) {
       if (isEmail) {
-        req.flash('error', 'Error.Passport.Email.NotFound');
+        // req.flash('error', 'Error.Passport.Email.NotFound');
       } else {
-        req.flash('error', 'Error.Passport.Username.NotFound');
+        // req.flash('error', 'Error.Passport.Username.NotFound');
       }
 
       return next(null, false);
     }
 
     sails.models.passport.findOne({
-      protocol : 'local'
-    , user     : user.id
+      protocol: 'local',
+      user: user.id
     }, function (err, passport) {
       if (passport) {
-        passport.validatePassword(password, function (err, res) {
+        validatePassword(password, passport.password, function (err, res) {
           if (err) {
+            console.log('********* Error validatePassword: ', err);
             return next(err);
           }
 
           if (!res) {
-            req.flash('error', 'Error.Passport.Password.Wrong');
+            console.log('********* Error validatePassword password is invalid or doesnt match: ', err);
+            // req.flash('error', 'Error.Passport.Password.Wrong');
             return next(null, false);
           } else {
             return next(null, user, passport);
           }
         });
-      }
-      else {
-        req.flash('error', 'Error.Passport.Password.NotSet');
+      } else {
+        console.log('********* Error fetching passport: ', err || passport);
+        // req.flash('error', 'Error.Passport.Password.NotSet');
         return next(null, false);
       }
     });
@@ -241,7 +291,7 @@ var EMAIL_REGEX = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF9
  * @see <https://github.com/chriso/validator.js/blob/3.18.0/validator.js#L38>
  * @see <https://github.com/chriso/validator.js/blob/3.18.0/validator.js#L141-L143>
  */
-function validateEmail (str) {
+function validateEmail(str) {
   return EMAIL_REGEX.test(str);
 }
 

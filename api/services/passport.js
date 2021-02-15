@@ -136,7 +136,7 @@ if (sails.services.passport) {
             }
 
             // Save any updates to the Passport before moving on
-            return passport.save()
+            return passport.update()
               .then(function () {
 
                 // Fetch the user associated with the Passport
@@ -298,7 +298,7 @@ if (sails.services.passport) {
           baseUrl = sails.config.appUrl;
         } else {
           sails.log.warn('Please add "appUrl" configuration value.');
-          baseUrl = sails.getBaseurl();
+          baseUrl = sails.config.apiServerRoot;
         }
 
         switch (protocol) {

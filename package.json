@@ -1,15 +1,16 @@
 {
-  "name": "sails-auth",
-  "version": "2.2.0",
+  "name": "@traverse-data/sails-auth",
+  "version": "3.0.14",
   "description": "Passport-based User Authentication system for sails.js applications.",
   "main": "dist/api/hooks/auth/index.js",
   "scripts": {
     "test": "mocha --reporter spec --compilers js:babel-core/register",
-    "prepublish": "gulp"
+    "prepublish": "gulp",
+    "release": "gulp && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags && npm publish --access public"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/tjwebb/sails-auth.git"
+    "url": "git://github.com/TraverseData/sails-auth.git"
   },
   "keywords": [
     "sails",
@@ -32,9 +33,9 @@
   "author": "Travis Webb <me@traviswebb.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/tjwebb/sails-auth/issues"
+    "url": "https://github.com/TraverseData/sails-auth/issues"
   },
-  "homepage": "https://github.com/tjwebb/sails-auth",
+  "homepage": "https://github.com/TraverseData/sails-auth",
   "dependencies": {
     "base64url": "^2.0.0",
     "bcryptjs": "^2.2",
